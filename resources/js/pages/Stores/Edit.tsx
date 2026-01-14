@@ -8,7 +8,18 @@ import stores from '@/routes/stores';
 import type { BreadcrumbItem } from '@/types';
 import { Form, Link, usePage } from '@inertiajs/react';
 
-type Store = { id: number; manual_id: string; name: string };
+type Store = {
+    id: number;
+    manual_id: string;
+    name: string;
+
+    address_line1: string;
+    address_line2?: string | null;
+    city: string;
+    state: string;
+    country: string;
+    postal_code: string;
+};
 
 export default function Edit() {
     const { store } = usePage<{ store: Store }>().props;
@@ -51,6 +62,86 @@ export default function Edit() {
                                 defaultValue={store.name}
                             />
                             <InputError message={errors.name} />
+                        </div>
+
+                        <div className="pt-2">
+                            <h2 className="text-sm font-medium">Location</h2>
+                            <div className="mt-3 space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="address_line1">
+                                        Address Line 1
+                                    </Label>
+                                    <Input
+                                        id="address_line1"
+                                        name="address_line1"
+                                        required
+                                        defaultValue={store.address_line1}
+                                    />
+                                    <InputError
+                                        message={errors.address_line1}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="address_line2">
+                                        Address Line 2 (optional)
+                                    </Label>
+                                    <Input
+                                        id="address_line2"
+                                        name="address_line2"
+                                        defaultValue={store.address_line2 ?? ''}
+                                    />
+                                    <InputError
+                                        message={errors.address_line2}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="city">City</Label>
+                                    <Input
+                                        id="city"
+                                        name="city"
+                                        required
+                                        defaultValue={store.city}
+                                    />
+                                    <InputError message={errors.city} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="state">State</Label>
+                                    <Input
+                                        id="state"
+                                        name="state"
+                                        required
+                                        defaultValue={store.state}
+                                    />
+                                    <InputError message={errors.state} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="country">Country</Label>
+                                    <Input
+                                        id="country"
+                                        name="country"
+                                        required
+                                        defaultValue={store.country}
+                                    />
+                                    <InputError message={errors.country} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="postal_code">
+                                        Postal Code
+                                    </Label>
+                                    <Input
+                                        id="postal_code"
+                                        name="postal_code"
+                                        required
+                                        defaultValue={store.postal_code}
+                                    />
+                                    <InputError message={errors.postal_code} />
+                                </div>
+                            </div>
                         </div>
 
                         <div className="flex gap-2">

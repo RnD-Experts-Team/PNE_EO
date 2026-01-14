@@ -39,12 +39,17 @@ type EmployeeContact = {
     is_primary: boolean;
 };
 
+type Store = {
+    id: number;
+    name: string;
+    manual_id: string;
+};
+
 type EmployeeEmployment = {
     employee_id: number;
-    department?: string | null;
-    location?: string | null;
-    designation?: string | null;
+    store_id?: number | null;
     hiring_date?: string | null;
+    store?: Store | null;
 };
 
 type EmployeeDemographics = {
@@ -153,6 +158,9 @@ export default function Show() {
     const addresses = employee.addresses ?? [];
     const tags = employee.tags ?? [];
 
+    const storeName = employee.employment?.store?.name ?? '—';
+    const storeManual = employee.employment?.store?.manual_id ?? null;
+
     return (
         <PageShell title={`Employee: ${fullName}`} breadcrumbs={breadcrumbs}>
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -202,12 +210,9 @@ export default function Show() {
                         </Button>
                     </CardHeader>
 
-                    {/* Fixed-height scroll area */}
                     <CardContent className="flex-1">
                         <div className="h-[320px] overflow-hidden rounded-lg border">
-                            {/* horizontal scroll if table gets wide */}
                             <div className="h-full overflow-x-auto">
-                                {/* vertical scroll inside */}
                                 <div className="h-full overflow-y-auto">
                                     <Table className="min-w-[520px]">
                                         <TableHeader className="sticky top-0 z-10 bg-background">
@@ -295,21 +300,15 @@ export default function Show() {
                         <div className="grid gap-2">
                             <div>
                                 <span className="font-medium text-foreground">
-                                    Department:
+                                    Store:
                                 </span>{' '}
-                                {employee.employment?.department ?? '—'}
-                            </div>
-                            <div>
-                                <span className="font-medium text-foreground">
-                                    Location:
-                                </span>{' '}
-                                {employee.employment?.location ?? '—'}
-                            </div>
-                            <div>
-                                <span className="font-medium text-foreground">
-                                    Designation:
-                                </span>{' '}
-                                {employee.employment?.designation ?? '—'}
+                                {storeName}
+                                {storeManual ? (
+                                    <span className="text-muted-foreground">
+                                        {' '}
+                                        (Manual: {storeManual})
+                                    </span>
+                                ) : null}
                             </div>
                             <div>
                                 <span className="font-medium text-foreground">

@@ -111,14 +111,25 @@ class DemoDataSeeder extends Seeder
             $expenseTypeIds = ExpenseType::query()->pluck('id')->all(); // ✅ DB uses id
 
             // ---------------------------
-            // STORES
+            // STORES (NOW WITH LOCATION FIELDS)
             // ---------------------------
             for ($i = 1; $i <= $storeCount; $i++) {
+                $state = $faker->stateAbbr();
+                $city = $faker->city();
+
                 Store::query()->create([
                     'manual_id' => 'S-' . str_pad((string) $i, 4, '0', STR_PAD_LEFT),
                     'name' => $faker->company() . ' Store',
+
+                    'address_line1' => $faker->streetAddress(),
+                    'address_line2' => $faker->boolean(30) ? $faker->secondaryAddress() : null,
+                    'city' => $city,
+                    'state' => $state,
+                    'country' => 'United States',
+                    'postal_code' => $faker->postcode(),
                 ]);
             }
+
             $storeIds = Store::query()->pluck('id')->all(); // ✅ DB uses id
 
             // ---------------------------
@@ -160,20 +171,12 @@ class DemoDataSeeder extends Seeder
                     ]);
                 }
 
-                // Employment
+                // Employment (NOW LINKS TO store_id)
                 $hireDate = Carbon::today()->subDays($faker->numberBetween(30, 3650)); // 1 month to 10 years
+
                 EmployeeEmployment::query()->create([
                     'employee_id' => $employee->id,
-                    'department' => $faker->randomElement(['Operations', 'HR', 'Finance', 'IT', 'Sales', 'Marketing']),
-                    'location' => $faker->randomElement(['New York', 'Chicago', 'Dallas', 'Los Angeles', 'Miami']),
-                    'designation' => $faker->randomElement([
-                        'Associate',
-                        'Senior Associate',
-                        'Team Lead',
-                        'Supervisor',
-                        'Manager',
-                        'Coordinator',
-                    ]),
+                    'store_id' => $faker->randomElement($storeIds),
                     'hiring_date' => $hireDate->toDateString(),
                 ]);
 

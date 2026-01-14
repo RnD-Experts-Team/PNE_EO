@@ -13,7 +13,14 @@ import stores from '@/routes/stores';
 import type { BreadcrumbItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 
-type StoreRow = { id: number; manual_id: string; name: string };
+type StoreRow = {
+    id: number;
+    manual_id: string;
+    name: string;
+    city: string;
+    state: string;
+    country: string;
+};
 
 type Pagination<T> = {
     data: T[];
@@ -50,6 +57,7 @@ export default function Index() {
                         <TableRow>
                             <TableHead>Manual ID</TableHead>
                             <TableHead>Name</TableHead>
+                            <TableHead>Location</TableHead>
                             <TableHead className="w-[1%] text-right">
                                 Actions
                             </TableHead>
@@ -62,6 +70,9 @@ export default function Index() {
                                     {s.manual_id}
                                 </TableCell>
                                 <TableCell>{s.name}</TableCell>
+                                <TableCell>
+                                    {s.city}, {s.state} · {s.country}
+                                </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2">
                                         <Button
@@ -90,7 +101,7 @@ export default function Index() {
                         {paged.data.length === 0 && (
                             <TableRow>
                                 <TableCell
-                                    colSpan={3}
+                                    colSpan={4}
                                     className="py-10 text-center text-sm text-muted-foreground"
                                 >
                                     No stores yet.

@@ -27,6 +27,14 @@ type Store = {
     id: number;
     manual_id: string;
     name: string;
+
+    address_line1: string;
+    address_line2?: string | null;
+    city: string;
+    state: string;
+    country: string;
+    postal_code: string;
+
     expenses: StoreExpense[];
 };
 
@@ -95,7 +103,6 @@ export default function Show() {
                         </Button>
                     </CardHeader>
 
-                    {/* Fixed-height scroll area */}
                     <CardContent className="flex-1">
                         <div className="h-[360px] overflow-hidden rounded-lg border">
                             <div className="h-full overflow-x-auto">
@@ -186,11 +193,29 @@ export default function Show() {
                                 </span>{' '}
                                 {store.manual_id}
                             </div>
+
                             <div>
                                 <span className="font-medium text-foreground">
                                     Name:
                                 </span>{' '}
                                 {store.name}
+                            </div>
+
+                            <div className="pt-2">
+                                <div className="font-medium text-foreground">
+                                    Location
+                                </div>
+                                <div className="mt-1 grid gap-1">
+                                    <div>{store.address_line1}</div>
+                                    {store.address_line2 ? (
+                                        <div>{store.address_line2}</div>
+                                    ) : null}
+                                    <div>
+                                        {store.city}, {store.state}{' '}
+                                        {store.postal_code}
+                                    </div>
+                                    <div>{store.country}</div>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

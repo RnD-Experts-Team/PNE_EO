@@ -6,6 +6,7 @@ use App\Http\Requests\EmployeeStoreRequest;
 use App\Http\Requests\EmployeeUpdateRequest;
 use App\Models\Employee;
 use App\Models\EmployeeStatus;
+use App\Models\Store;
 use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,12 +20,10 @@ class EmployeeController extends Controller
         $statusId = $request->integer('status_id') ?: null;
         $tagId = $request->integer('tag_id') ?: null;
 
-        $department = $request->string('department')->toString();
-        $location = $request->string('location')->toString();
-        $designation = $request->string('designation')->toString();
+        $storeId = $request->integer('store_id') ?: null;
 
         $employees = Employee::query()
-            ->with(['status', 'tags', 'employment'])
+            ->with(['status', 'tags', 'employment.store'])
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($qq) use ($search) {
                     $qq->where('first_name', 'like', "%{$search}%")
@@ -37,14 +36,8 @@ class EmployeeController extends Controller
             ->when($tagId, function ($q) use ($tagId) {
                 $q->whereHas('tags', fn($tq) => $tq->where('tags.id', $tagId));
             })
-            ->when($department !== '', function ($q) use ($department) {
-                $q->whereHas('employment', fn($eq) => $eq->where('department', 'like', "%{$department}%"));
-            })
-            ->when($location !== '', function ($q) use ($location) {
-                $q->whereHas('employment', fn($eq) => $eq->where('location', 'like', "%{$location}%"));
-            })
-            ->when($designation !== '', function ($q) use ($designation) {
-                $q->whereHas('employment', fn($eq) => $eq->where('designation', 'like', "%{$designation}%"));
+            ->when($storeId, function ($q) use ($storeId) {
+                $q->whereHas('employment', fn($eq) => $eq->where('store_id', $storeId));
             })
             ->orderBy('last_name')
             ->orderBy('first_name')
@@ -55,13 +48,12 @@ class EmployeeController extends Controller
             'employees' => $employees,
             'statuses' => EmployeeStatus::orderBy('value')->get(['id', 'value']),
             'tags' => Tag::orderBy('tag_name')->get(['id', 'tag_name']),
+            'stores' => Store::orderBy('name')->get(['id', 'name', 'manual_id']),
             'filters' => [
                 'search' => $search,
                 'status_id' => $statusId,
                 'tag_id' => $tagId,
-                'department' => $department,
-                'location' => $location,
-                'designation' => $designation,
+                'store_id' => $storeId,
             ],
         ]);
     }
@@ -71,6 +63,7 @@ class EmployeeController extends Controller
         return Inertia::render('Employees/Create', [
             'statuses' => EmployeeStatus::orderBy('value')->get(['id', 'value']),
             'tags' => Tag::orderBy('tag_name')->get(['id', 'tag_name']),
+            'stores' => Store::orderBy('name')->get(['id', 'name', 'manual_id']),
         ]);
     }
 
@@ -104,7 +97,7 @@ class EmployeeController extends Controller
         $employee->load([
             'status',
             'contacts',
-            'employment',
+            'employment.store',
             'demographics',
             'identifiers',
             'addresses',
@@ -123,7 +116,7 @@ class EmployeeController extends Controller
             'employee' => $employee->load([
                 'status',
                 'contacts',
-                'employment',
+                'employment.store',
                 'demographics',
                 'identifiers',
                 'addresses',
@@ -131,6 +124,7 @@ class EmployeeController extends Controller
             ]),
             'statuses' => EmployeeStatus::orderBy('value')->get(['id', 'value']),
             'tags' => Tag::orderBy('tag_name')->get(['id', 'tag_name']),
+            'stores' => Store::orderBy('name')->get(['id', 'name', 'manual_id']),
         ]);
     }
 
@@ -168,6 +162,13 @@ class EmployeeController extends Controller
         // employment
         if (array_key_exists('employment', $data)) {
             $payload = $data['employment'] ?? [];
+
+            // keep only known fields (prevents stray keys)
+            $payload = [
+                'store_id' => $payload['store_id'] ?? null,
+                'hiring_date' => $payload['hiring_date'] ?? null,
+            ];
+
             if ($this->hasAnyFilled($payload)) {
                 $employee->employment()->updateOrCreate(
                     ['employee_id' => $employee->id],

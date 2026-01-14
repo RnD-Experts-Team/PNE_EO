@@ -25,6 +25,13 @@ class StoreController extends Controller
         $data = $request->validate([
             'manual_id' => ['required', 'string', 'max:50', 'unique:stores,manual_id'],
             'name' => ['required', 'string', 'max:255'],
+
+            'address_line1' => ['required', 'string', 'max:255'],
+            'address_line2' => ['nullable', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:100'],
+            'state' => ['required', 'string', 'max:100'],
+            'country' => ['required', 'string', 'max:100'],
+            'postal_code' => ['required', 'string', 'max:30'],
         ]);
 
         $store = Store::create($data);
@@ -53,6 +60,13 @@ class StoreController extends Controller
         $data = $request->validate([
             'manual_id' => ['required', 'string', 'max:50', 'unique:stores,manual_id,' . $store->id],
             'name' => ['required', 'string', 'max:255'],
+
+            'address_line1' => ['required', 'string', 'max:255'],
+            'address_line2' => ['nullable', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:100'],
+            'state' => ['required', 'string', 'max:100'],
+            'country' => ['required', 'string', 'max:100'],
+            'postal_code' => ['required', 'string', 'max:30'],
         ]);
 
         $store->update($data);

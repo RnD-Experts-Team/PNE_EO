@@ -27,10 +27,11 @@ import { useEffect, useMemo, useState } from 'react';
 type EmployeeStatus = { id: number; value: string };
 type Tag = { id: number; tag_name: string };
 
+type Store = { id: number; name: string; manual_id: string };
+
 type Employment = {
-    department?: string | null;
-    location?: string | null;
-    designation?: string | null;
+    store_id?: number | null;
+    store?: Store | null;
 };
 
 type EmployeeRow = {
@@ -54,9 +55,7 @@ type Filters = {
     search?: string;
     status_id?: number | null;
     tag_id?: number | null;
-    department?: string;
-    location?: string;
-    designation?: string;
+    store_id?: number | null;
 };
 
 const ALL = 'all';
@@ -66,11 +65,13 @@ export default function Index() {
         employees: paged,
         statuses,
         tags,
+        stores,
         filters,
     } = usePage<{
         employees: Pagination<EmployeeRow>;
         statuses: EmployeeStatus[];
         tags: Tag[];
+        stores: Store[];
         filters: Filters;
     }>().props;
 
@@ -86,22 +87,19 @@ export default function Index() {
     const [tagId, setTagId] = useState<string>(
         filters.tag_id ? String(filters.tag_id) : ALL,
     );
-    const [department, setDepartment] = useState(filters.department ?? '');
-    const [location, setLocation] = useState(filters.location ?? '');
-    const [designation, setDesignation] = useState(filters.designation ?? '');
+    const [storeId, setStoreId] = useState<string>(
+        filters.store_id ? String(filters.store_id) : ALL,
+    );
 
     const query = useMemo(() => {
         const q: Record<string, any> = {};
         if (search.trim()) q.search = search.trim();
         if (statusId !== ALL) q.status_id = statusId;
         if (tagId !== ALL) q.tag_id = tagId;
-        if (department.trim()) q.department = department.trim();
-        if (location.trim()) q.location = location.trim();
-        if (designation.trim()) q.designation = designation.trim();
+        if (storeId !== ALL) q.store_id = storeId;
         return q;
-    }, [search, statusId, tagId, department, location, designation]);
+    }, [search, statusId, tagId, storeId]);
 
-    // Small debounce for search typing
     useEffect(() => {
         const t = setTimeout(() => {
             router.get(employees.index().url, query, {
@@ -119,9 +117,7 @@ export default function Index() {
         setSearch('');
         setStatusId(ALL);
         setTagId(ALL);
-        setDepartment('');
-        setLocation('');
-        setDesignation('');
+        setStoreId(ALL);
         router.get(
             employees.index().url,
             {},
@@ -190,31 +186,21 @@ export default function Index() {
                         </Select>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>Department</Label>
-                        <Input
-                            value={department}
-                            onChange={(e) => setDepartment(e.target.value)}
-                            placeholder="e.g. Engineering"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Location</Label>
-                        <Input
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            placeholder="e.g. New York"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Designation</Label>
-                        <Input
-                            value={designation}
-                            onChange={(e) => setDesignation(e.target.value)}
-                            placeholder="e.g. Manager"
-                        />
+                    <div className="space-y-2 md:col-span-3">
+                        <Label>Store</Label>
+                        <Select value={storeId} onValueChange={setStoreId}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Any store" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={ALL}>Any</SelectItem>
+                                {stores.map((s) => (
+                                    <SelectItem key={s.id} value={String(s.id)}>
+                                        {s.name} (#{s.manual_id})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 
@@ -253,11 +239,9 @@ export default function Index() {
                                 .filter(Boolean)
                                 .join(' ');
 
-                            const empBits = [
-                                e.employment?.department,
-                                e.employment?.designation,
-                                e.employment?.location,
-                            ].filter(Boolean);
+                            const storeName = e.employment?.store?.name ?? null;
+                            const storeManual =
+                                e.employment?.store?.manual_id ?? null;
 
                             return (
                                 <TableRow key={e.id}>
@@ -277,9 +261,12 @@ export default function Index() {
                                         )}
                                     </TableCell>
                                     <TableCell>
-                                        {empBits.length ? (
+                                        {storeName ? (
                                             <span className="text-sm">
-                                                {empBits.join(' • ')}
+                                                {storeName}
+                                                {storeManual
+                                                    ? ` • #${storeManual}`
+                                                    : ''}
                                             </span>
                                         ) : (
                                             '—'

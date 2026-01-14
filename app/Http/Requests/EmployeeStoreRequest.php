@@ -24,9 +24,7 @@ class EmployeeStoreRequest extends FormRequest
 
             // hasOne: employment
             'employment' => ['nullable', 'array'],
-            'employment.department' => ['nullable', 'string', 'max:255'],
-            'employment.location' => ['nullable', 'string', 'max:255'],
-            'employment.designation' => ['nullable', 'string', 'max:255'],
+            'employment.store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'employment.hiring_date' => ['nullable', 'date'],
 
             // hasOne: demographics

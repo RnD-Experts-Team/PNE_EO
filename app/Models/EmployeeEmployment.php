@@ -13,9 +13,7 @@ class EmployeeEmployment extends Model
 
     protected $fillable = [
         'employee_id',
-        'department',
-        'location',
-        'designation',
+        'store_id',
         'hiring_date',
     ];
 
@@ -26,5 +24,10 @@ class EmployeeEmployment extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class);
     }
 }
