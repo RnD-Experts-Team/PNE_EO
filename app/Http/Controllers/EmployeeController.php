@@ -19,7 +19,6 @@ class EmployeeController extends Controller
         $search = $request->string('search')->toString();
         $statusId = $request->integer('status_id') ?: null;
         $tagId = $request->integer('tag_id') ?: null;
-
         $storeId = $request->integer('store_id') ?: null;
 
         $employees = Employee::query()
@@ -182,6 +181,15 @@ class EmployeeController extends Controller
         // demographics
         if (array_key_exists('demographics', $data)) {
             $payload = $data['demographics'] ?? [];
+
+            // keep only known fields
+            $payload = [
+                'date_of_birth' => $payload['date_of_birth'] ?? null,
+                'gender' => $payload['gender'] ?? null,
+                'marital_status' => $payload['marital_status'] ?? null,
+                'veteran_status' => $payload['veteran_status'] ?? false,
+            ];
+
             if ($this->hasAnyFilled($payload)) {
                 $employee->demographics()->updateOrCreate(
                     ['employee_id' => $employee->id],
@@ -195,6 +203,14 @@ class EmployeeController extends Controller
         // identifiers
         if (array_key_exists('identifiers', $data)) {
             $payload = $data['identifiers'] ?? [];
+
+            // keep only known fields
+            $payload = [
+                'social_security_number' => $payload['social_security_number'] ?? null,
+                'national_id_number' => $payload['national_id_number'] ?? null,
+                'itin' => $payload['itin'] ?? null,
+            ];
+
             if ($this->hasAnyFilled($payload)) {
                 $employee->identifiers()->updateOrCreate(
                     ['employee_id' => $employee->id],
@@ -208,39 +224,59 @@ class EmployeeController extends Controller
 
     private function persistHasMany(Employee $employee, array $data, bool $isUpdate = false): void
     {
-        // contacts upsert + delete missing
+        // contacts upsert + delete missing + enforce single primary
         if (array_key_exists('contacts', $data)) {
             $items = $data['contacts'] ?? [];
             $keptIds = [];
+            $primaryCandidateId = null;
 
             foreach ($items as $item) {
-                // skip totally blank rows
+                // Skip totally blank rows (IMPORTANT: bool false should not count as filled)
                 if (!$this->hasAnyFilled($item)) {
                     continue;
                 }
 
+                $payload = [
+                    'contact_type' => $item['contact_type'] ?? null,
+                    'contact_value' => $item['contact_value'] ?? null,
+                    'is_primary' => (bool)($item['is_primary'] ?? false),
+                ];
+
                 if (!empty($item['id'])) {
                     $contact = $employee->contacts()->whereKey($item['id'])->first();
                     if ($contact) {
-                        $contact->update([
-                            'contact_type' => $item['contact_type'] ?? null,
-                            'contact_value' => $item['contact_value'] ?? null,
-                            'is_primary' => (bool)($item['is_primary'] ?? false),
-                        ]);
+                        $contact->update($payload);
                         $keptIds[] = $contact->id;
+
+                        if ($payload['is_primary'] && $primaryCandidateId === null) {
+                            $primaryCandidateId = $contact->id;
+                        }
                     }
                 } else {
-                    $contact = $employee->contacts()->create([
-                        'contact_type' => $item['contact_type'] ?? null,
-                        'contact_value' => $item['contact_value'] ?? null,
-                        'is_primary' => (bool)($item['is_primary'] ?? false),
-                    ]);
+                    $contact = $employee->contacts()->create($payload);
                     $keptIds[] = $contact->id;
+
+                    if ($payload['is_primary'] && $primaryCandidateId === null) {
+                        $primaryCandidateId = $contact->id;
+                    }
                 }
             }
 
             if ($isUpdate) {
                 $employee->contacts()->whereNotIn('id', $keptIds)->delete();
+            }
+
+            // Normalize primary: if any kept, ensure exactly one is_primary = 1
+            if (!empty($keptIds)) {
+                $chosen = $primaryCandidateId ?? $keptIds[0];
+
+                $employee->contacts()
+                    ->whereIn('id', $keptIds)
+                    ->update(['is_primary' => 0]);
+
+                $employee->contacts()
+                    ->whereKey($chosen)
+                    ->update(['is_primary' => 1]);
             }
         }
 
@@ -286,9 +322,26 @@ class EmployeeController extends Controller
     {
         foreach ($payload as $k => $v) {
             if ($k === 'id') continue;
-            if (is_bool($v)) return true;
+
+            // IMPORTANT: false should NOT count as "filled"
+            if (is_bool($v)) {
+                if ($v === true) return true;
+                continue;
+            }
+
+            // Treat "0" as filled only if you explicitly want it to count.
+            // For our use-case: strings like "0" coming from hidden inputs should not force row creation.
+            if (is_string($v)) {
+                $trim = trim($v);
+                if ($trim === '' || $trim === '0') {
+                    continue;
+                }
+                return true;
+            }
+
             if ($v !== null && $v !== '') return true;
         }
+
         return false;
     }
 }

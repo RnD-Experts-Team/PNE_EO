@@ -118,6 +118,7 @@ export default function Index() {
         setStatusId(ALL);
         setTagId(ALL);
         setStoreId(ALL);
+
         router.get(
             employees.index().url,
             {},

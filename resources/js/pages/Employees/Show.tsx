@@ -34,7 +34,7 @@ type EmployeeStatus = { id: number; value: string };
 
 type EmployeeContact = {
     id: number;
-    contact_type: string;
+    contact_type: 'work_email' | 'work_phone' | string;
     contact_value: string;
     is_primary: boolean;
 };
@@ -55,8 +55,14 @@ type EmployeeEmployment = {
 type EmployeeDemographics = {
     employee_id: number;
     date_of_birth?: string | null;
-    gender?: string | null;
-    marital_status?: string | null;
+    gender?: 'Male' | 'Female' | string | null;
+    marital_status?:
+        | 'Single'
+        | 'Divorced'
+        | 'Married'
+        | 'Widowed'
+        | string
+        | null;
     veteran_status?: boolean | null;
 };
 
@@ -69,7 +75,7 @@ type EmployeeIdentifiers = {
 
 type EmployeeAddress = {
     id: number;
-    address_type?: string | null;
+    address_type?: 'present' | string | null;
     address_line1?: string | null;
     address_line2?: string | null;
     city?: string | null;
@@ -105,10 +111,14 @@ type Employee = {
 
 function formatDateSafe(dateStr?: string | null): string {
     if (!dateStr) return '—';
-    const m = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
+    const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (!m) return dateStr;
 
-    const [y, mo, d] = m[1].split('-').map((x) => Number(x));
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = Number(m[3]);
+    if (!y || !mo || !d) return dateStr;
+
     const monthNames = [
         'Jan',
         'Feb',
@@ -123,8 +133,9 @@ function formatDateSafe(dateStr?: string | null): string {
         'Nov',
         'Dec',
     ];
-    const mm = monthNames[(mo ?? 1) - 1] ?? '';
-    return `${mm} ${d}, ${y}`;
+
+    const mm = monthNames[mo - 1] ?? '';
+    return mm ? `${mm} ${d}, ${y}` : dateStr;
 }
 
 function yesNo(value?: boolean | null): string {
@@ -135,6 +146,19 @@ function yesNo(value?: boolean | null): string {
 
 function displayTag(t: Tag): string {
     return t.tag_name ?? '—';
+}
+
+function contactTypeLabel(v?: string | null): string {
+    if (!v) return '—';
+    if (v === 'work_email') return 'Work email';
+    if (v === 'work_phone') return 'Work phone';
+    return v;
+}
+
+function addressTypeLabel(v?: string | null): string {
+    if (!v) return 'Address';
+    if (v === 'present') return 'Present address';
+    return v;
 }
 
 export default function Show() {
@@ -411,7 +435,9 @@ export default function Show() {
                                     {contacts.map((c) => (
                                         <TableRow key={c.id}>
                                             <TableCell>
-                                                {c.contact_type}
+                                                {contactTypeLabel(
+                                                    c.contact_type,
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 {c.contact_value}
@@ -460,7 +486,7 @@ export default function Show() {
                                         className="rounded-md border p-3"
                                     >
                                         <div className="font-medium text-foreground">
-                                            {a.address_type ?? 'Address'}
+                                            {addressTypeLabel(a.address_type)}
                                         </div>
                                         <div>{a.address_line1 ?? '—'}</div>
                                         {a.address_line2 ? (

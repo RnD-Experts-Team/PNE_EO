@@ -23,21 +23,26 @@ type Store = { id: number; name: string; manual_id: string };
 
 type ContactRow = {
     id?: number;
-    contact_type: string;
+    contact_type: 'work_email' | 'work_phone';
     contact_value: string;
     is_primary: boolean;
 };
 
 type AddressRow = {
     id?: number;
-    address_type: string;
+    address_type: 'present';
     address_line1: string;
     address_line2?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    postal_code?: string;
+    city: string;
+    state: string;
+    country: string;
+    postal_code: string;
 };
+
+const RequiredMark = () => <span className="text-destructive"> *</span>;
+const OptionalMark = () => (
+    <span className="ml-1 text-xs text-muted-foreground">(optional)</span>
+);
 
 export default function Create() {
     const { statuses, tags, stores } = usePage<{
@@ -49,15 +54,19 @@ export default function Create() {
     const [statusId, setStatusId] = useState<string>('');
     const [employmentStoreId, setEmploymentStoreId] = useState<string>('');
 
-    // hasMany: contacts
+    // demographics (enum per DB)
+    const [gender, setGender] = useState<string>(''); // Male | Female
+    const [maritalStatus, setMaritalStatus] = useState<string>(''); // Single | Divorced | Married | Widowed
+
+    // hasMany: contacts (enum per DB)
     const [contacts, setContacts] = useState<ContactRow[]>([
-        { contact_type: 'email', contact_value: '', is_primary: true },
+        { contact_type: 'work_email', contact_value: '', is_primary: true },
     ]);
 
-    // hasMany: addresses
+    // hasMany: addresses (enum per DB: only "present")
     const [addresses, setAddresses] = useState<AddressRow[]>([
         {
-            address_type: 'home',
+            address_type: 'present',
             address_line1: '',
             address_line2: '',
             city: '',
@@ -92,7 +101,7 @@ export default function Create() {
         setContacts((prev) => [
             ...prev,
             {
-                contact_type: 'phone',
+                contact_type: 'work_phone',
                 contact_value: '',
                 is_primary: prev.length === 0,
             },
@@ -102,14 +111,13 @@ export default function Create() {
     const removeContact = (idx: number) => {
         setContacts((prev) => {
             const next = prev.filter((_, i) => i !== idx);
-            // ensure at least one primary if any contacts remain
             if (next.length && !next.some((c) => c.is_primary))
                 next[0].is_primary = true;
             return next.length
                 ? next
                 : [
                       {
-                          contact_type: 'email',
+                          contact_type: 'work_email',
                           contact_value: '',
                           is_primary: true,
                       },
@@ -121,7 +129,7 @@ export default function Create() {
         setAddresses((prev) => [
             ...prev,
             {
-                address_type: 'home',
+                address_type: 'present',
                 address_line1: '',
                 address_line2: '',
                 city: '',
@@ -139,7 +147,7 @@ export default function Create() {
                 ? next
                 : [
                       {
-                          address_type: 'home',
+                          address_type: 'present',
                           address_line1: '',
                           address_line2: '',
                           city: '',
@@ -176,6 +184,7 @@ export default function Create() {
                                 <div className="space-y-2">
                                     <Label htmlFor="first_name">
                                         First name
+                                        <RequiredMark />
                                     </Label>
                                     <Input
                                         id="first_name"
@@ -188,6 +197,7 @@ export default function Create() {
                                 <div className="space-y-2">
                                     <Label htmlFor="middle_name">
                                         Middle name
+                                        <OptionalMark />
                                     </Label>
                                     <Input
                                         id="middle_name"
@@ -197,7 +207,10 @@ export default function Create() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="last_name">Last name</Label>
+                                    <Label htmlFor="last_name">
+                                        Last name
+                                        <RequiredMark />
+                                    </Label>
                                     <Input
                                         id="last_name"
                                         name="last_name"
@@ -209,6 +222,7 @@ export default function Create() {
                                 <div className="space-y-2">
                                     <Label htmlFor="preferred_name">
                                         Preferred name
+                                        <OptionalMark />
                                     </Label>
                                     <Input
                                         id="preferred_name"
@@ -221,7 +235,10 @@ export default function Create() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Status</Label>
+                                <Label>
+                                    Status
+                                    <RequiredMark />
+                                </Label>
                                 <input
                                     type="hidden"
                                     name="employee_status_id"
@@ -251,7 +268,10 @@ export default function Create() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="about_me">About</Label>
+                                <Label htmlFor="about_me">
+                                    About
+                                    <OptionalMark />
+                                </Label>
                                 <Textarea
                                     id="about_me"
                                     name="about_me"
@@ -266,10 +286,17 @@ export default function Create() {
                             <h2 className="text-sm font-medium text-muted-foreground">
                                 Employment
                             </h2>
+                            <p className="text-xs text-muted-foreground">
+                                Optional. If you choose a store or date, the
+                                record will be created.
+                            </p>
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2 md:col-span-2">
-                                    <Label>Store</Label>
+                                    <Label>
+                                        Store
+                                        <OptionalMark />
+                                    </Label>
                                     <input
                                         type="hidden"
                                         name="employment[store_id]"
@@ -314,6 +341,7 @@ export default function Create() {
                                 <div className="space-y-2">
                                     <Label htmlFor="employment_hiring_date">
                                         Hiring date
+                                        <OptionalMark />
                                     </Label>
                                     <Input
                                         id="employment_hiring_date"
@@ -336,10 +364,17 @@ export default function Create() {
                             <h2 className="text-sm font-medium text-muted-foreground">
                                 Demographics
                             </h2>
+                            <p className="text-xs text-muted-foreground">
+                                Optional. Gender and marital status use the
+                                database values.
+                            </p>
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label>Date of birth</Label>
+                                    <Label>
+                                        Date of birth
+                                        <OptionalMark />
+                                    </Label>
                                     <Input
                                         type="date"
                                         name="demographics[date_of_birth]"
@@ -354,8 +389,36 @@ export default function Create() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Gender</Label>
-                                    <Input name="demographics[gender]" />
+                                    <Label>
+                                        Gender
+                                        <OptionalMark />
+                                    </Label>
+                                    <input
+                                        type="hidden"
+                                        name="demographics[gender]"
+                                        value={gender}
+                                    />
+                                    <Select
+                                        value={gender || 'none'}
+                                        onValueChange={(v) =>
+                                            setGender(v === 'none' ? '' : v)
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select gender" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">
+                                                —
+                                            </SelectItem>
+                                            <SelectItem value="Male">
+                                                Male
+                                            </SelectItem>
+                                            <SelectItem value="Female">
+                                                Female
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                     <InputError
                                         message={
                                             (errors as any)[
@@ -366,8 +429,44 @@ export default function Create() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Marital status</Label>
-                                    <Input name="demographics[marital_status]" />
+                                    <Label>
+                                        Marital status
+                                        <OptionalMark />
+                                    </Label>
+                                    <input
+                                        type="hidden"
+                                        name="demographics[marital_status]"
+                                        value={maritalStatus}
+                                    />
+                                    <Select
+                                        value={maritalStatus || 'none'}
+                                        onValueChange={(v) =>
+                                            setMaritalStatus(
+                                                v === 'none' ? '' : v,
+                                            )
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select marital status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">
+                                                —
+                                            </SelectItem>
+                                            <SelectItem value="Single">
+                                                Single
+                                            </SelectItem>
+                                            <SelectItem value="Married">
+                                                Married
+                                            </SelectItem>
+                                            <SelectItem value="Divorced">
+                                                Divorced
+                                            </SelectItem>
+                                            <SelectItem value="Widowed">
+                                                Widowed
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                     <InputError
                                         message={
                                             (errors as any)[
@@ -378,13 +477,22 @@ export default function Create() {
                                 </div>
 
                                 <div className="flex items-center gap-2 pt-6">
+                                    {/* ensure false is submitted when unchecked */}
+                                    <input
+                                        type="hidden"
+                                        name="demographics[veteran_status]"
+                                        value="0"
+                                    />
                                     <input
                                         id="veteran"
                                         type="checkbox"
                                         name="demographics[veteran_status]"
                                         value="1"
                                     />
-                                    <Label htmlFor="veteran">Veteran</Label>
+                                    <Label htmlFor="veteran">
+                                        Veteran
+                                        <OptionalMark />
+                                    </Label>
                                     <InputError
                                         message={
                                             (errors as any)[
@@ -401,10 +509,16 @@ export default function Create() {
                             <h2 className="text-sm font-medium text-muted-foreground">
                                 Identifiers
                             </h2>
+                            <p className="text-xs text-muted-foreground">
+                                Optional.
+                            </p>
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label>SSN</Label>
+                                    <Label>
+                                        SSN
+                                        <OptionalMark />
+                                    </Label>
                                     <Input name="identifiers[social_security_number]" />
                                     <InputError
                                         message={
@@ -416,7 +530,10 @@ export default function Create() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>National ID</Label>
+                                    <Label>
+                                        National ID
+                                        <OptionalMark />
+                                    </Label>
                                     <Input name="identifiers[national_id_number]" />
                                     <InputError
                                         message={
@@ -428,7 +545,10 @@ export default function Create() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>ITIN</Label>
+                                    <Label>
+                                        ITIN
+                                        <OptionalMark />
+                                    </Label>
                                     <Input name="identifiers[itin]" />
                                     <InputError
                                         message={
@@ -442,9 +562,22 @@ export default function Create() {
                         {/* Contacts */}
                         <section className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-sm font-medium text-muted-foreground">
-                                    Contacts
-                                </h2>
+                                <div>
+                                    <h2 className="text-sm font-medium text-muted-foreground">
+                                        Contacts
+                                    </h2>
+                                    <p className="text-xs text-muted-foreground">
+                                        Optional. If you add a row,{' '}
+                                        <span className="font-medium">
+                                            Type
+                                        </span>{' '}
+                                        and{' '}
+                                        <span className="font-medium">
+                                            Value
+                                        </span>{' '}
+                                        are required.
+                                    </p>
+                                </div>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -460,7 +593,6 @@ export default function Create() {
                                         key={idx}
                                         className="rounded-md border p-4"
                                     >
-                                        {/* hidden id for edit parity (won't exist here, but harmless) */}
                                         <input
                                             type="hidden"
                                             name={`contacts[${idx}][id]`}
@@ -469,39 +601,38 @@ export default function Create() {
 
                                         <div className="grid gap-4 md:grid-cols-3">
                                             <div className="space-y-2">
-                                                <Label>Type</Label>
-                                                <select
-                                                    className="w-full rounded-md border px-3 py-2 text-sm"
+                                                <Label>
+                                                    Type
+                                                    <RequiredMark />
+                                                </Label>
+                                                <Select
                                                     value={c.contact_type}
-                                                    onChange={(e) =>
+                                                    onValueChange={(v) =>
                                                         setContacts((prev) =>
                                                             prev.map((x, i) =>
                                                                 i === idx
                                                                     ? {
                                                                           ...x,
                                                                           contact_type:
-                                                                              e
-                                                                                  .target
-                                                                                  .value,
+                                                                              v as ContactRow['contact_type'],
                                                                       }
                                                                     : x,
                                                             ),
                                                         )
                                                     }
                                                 >
-                                                    <option value="email">
-                                                        email
-                                                    </option>
-                                                    <option value="phone">
-                                                        phone
-                                                    </option>
-                                                    <option value="sms">
-                                                        sms
-                                                    </option>
-                                                    <option value="other">
-                                                        other
-                                                    </option>
-                                                </select>
+                                                    <SelectTrigger>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="work_email">
+                                                            Work email
+                                                        </SelectItem>
+                                                        <SelectItem value="work_phone">
+                                                            Work phone
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
 
                                                 <input
                                                     type="hidden"
@@ -518,7 +649,10 @@ export default function Create() {
                                             </div>
 
                                             <div className="space-y-2 md:col-span-2">
-                                                <Label>Value</Label>
+                                                <Label>
+                                                    Value
+                                                    <RequiredMark />
+                                                </Label>
                                                 <Input
                                                     value={c.contact_value}
                                                     onChange={(e) =>
@@ -575,7 +709,6 @@ export default function Create() {
                                             </Button>
                                         </div>
 
-                                        {/* actual field sent to backend */}
                                         <input
                                             type="hidden"
                                             name={`contacts[${idx}][is_primary]`}
@@ -598,9 +731,21 @@ export default function Create() {
                         {/* Addresses */}
                         <section className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-sm font-medium text-muted-foreground">
-                                    Addresses
-                                </h2>
+                                <div>
+                                    <h2 className="text-sm font-medium text-muted-foreground">
+                                        Addresses
+                                    </h2>
+                                    <p className="text-xs text-muted-foreground">
+                                        Optional. If you add an address row, the
+                                        database requires:
+                                        <span className="font-medium">
+                                            {' '}
+                                            line 1, city, state, country, postal
+                                            code
+                                        </span>
+                                        .
+                                    </p>
+                                </div>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -624,36 +769,23 @@ export default function Create() {
 
                                         <div className="grid gap-4 md:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label>Type</Label>
-                                                <select
-                                                    className="w-full rounded-md border px-3 py-2 text-sm"
+                                                <Label>
+                                                    Type
+                                                    <RequiredMark />
+                                                </Label>
+                                                <Select
                                                     value={a.address_type}
-                                                    onChange={(e) =>
-                                                        setAddresses((prev) =>
-                                                            prev.map((x, i) =>
-                                                                i === idx
-                                                                    ? {
-                                                                          ...x,
-                                                                          address_type:
-                                                                              e
-                                                                                  .target
-                                                                                  .value,
-                                                                      }
-                                                                    : x,
-                                                            ),
-                                                        )
-                                                    }
+                                                    onValueChange={() => {}}
                                                 >
-                                                    <option value="home">
-                                                        home
-                                                    </option>
-                                                    <option value="work">
-                                                        work
-                                                    </option>
-                                                    <option value="other">
-                                                        other
-                                                    </option>
-                                                </select>
+                                                    <SelectTrigger>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="present">
+                                                            Present
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                                 <input
                                                     type="hidden"
                                                     name={`addresses[${idx}][address_type]`}
@@ -669,7 +801,10 @@ export default function Create() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label>Address line 1</Label>
+                                                <Label>
+                                                    Address line 1
+                                                    <RequiredMark />
+                                                </Label>
                                                 <Input
                                                     value={a.address_line1}
                                                     onChange={(e) =>
@@ -703,7 +838,10 @@ export default function Create() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label>Address line 2</Label>
+                                                <Label>
+                                                    Address line 2
+                                                    <OptionalMark />
+                                                </Label>
                                                 <Input
                                                     value={
                                                         a.address_line2 ?? ''
@@ -741,7 +879,10 @@ export default function Create() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label>City</Label>
+                                                <Label>
+                                                    City
+                                                    <RequiredMark />
+                                                </Label>
                                                 <Input
                                                     value={a.city ?? ''}
                                                     onChange={(e) =>
@@ -774,7 +915,10 @@ export default function Create() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label>State</Label>
+                                                <Label>
+                                                    State
+                                                    <RequiredMark />
+                                                </Label>
                                                 <Input
                                                     value={a.state ?? ''}
                                                     onChange={(e) =>
@@ -807,7 +951,10 @@ export default function Create() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label>Country</Label>
+                                                <Label>
+                                                    Country
+                                                    <RequiredMark />
+                                                </Label>
                                                 <Input
                                                     value={a.country ?? ''}
                                                     onChange={(e) =>
@@ -841,7 +988,10 @@ export default function Create() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label>Postal code</Label>
+                                                <Label>
+                                                    Postal code
+                                                    <RequiredMark />
+                                                </Label>
                                                 <Input
                                                     value={a.postal_code ?? ''}
                                                     onChange={(e) =>
@@ -899,9 +1049,9 @@ export default function Create() {
                         <section className="space-y-4">
                             <h2 className="text-sm font-medium text-muted-foreground">
                                 Tags
+                                <OptionalMark />
                             </h2>
 
-                            {/* send tag_ids[] array */}
                             {tagIds.map((id) => (
                                 <input
                                     key={id}

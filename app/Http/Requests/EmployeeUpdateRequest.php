@@ -20,7 +20,9 @@ class EmployeeUpdateRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         if (is_string($this->input('tag_ids'))) {
-            $this->merge(['tag_ids' => array_filter(explode(',', $this->input('tag_ids')))]);
+            $this->merge([
+                'tag_ids' => array_values(array_filter(explode(',', $this->input('tag_ids')))),
+            ]);
         }
     }
 }
