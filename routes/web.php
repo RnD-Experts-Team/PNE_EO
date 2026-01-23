@@ -12,8 +12,13 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CustomEventController;
 use App\Http\Controllers\DayNoteController;
 use App\Http\Controllers\MilestoneTemplateController;
+use App\Http\Controllers\EmployeeImportController;
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
+    Route::get('/employees/import', [EmployeeImportController::class, 'create'])->name('employees.import.create');
+    Route::post('/employees/import', [EmployeeImportController::class, 'store'])->name('employees.import.store');
+    Route::get('/employees/import/template', [EmployeeImportController::class, 'template'])
+        ->name('employees.import.template');
     Route::resource('employees', EmployeeController::class);
 
     Route::resource('expense-types', ExpenseTypeController::class)->except(['show']);
@@ -40,7 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Custom Events

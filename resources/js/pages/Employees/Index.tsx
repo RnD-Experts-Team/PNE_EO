@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/table';
 import { dashboard } from '@/routes';
 import employees from '@/routes/employees';
+import employeesImport from '@/routes/employees/import';
 import type { BreadcrumbItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
@@ -136,9 +137,17 @@ export default function Index() {
                     </p>
                 </div>
 
-                <Button asChild>
-                    <Link href={employees.create().url}>Create Employee</Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" asChild>
+                        <Link href={employeesImport.create().url}>Import</Link>
+                    </Button>
+
+                    <Button asChild>
+                        <Link href={employees.create().url}>
+                            Create Employee
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             {/* Filters */}
