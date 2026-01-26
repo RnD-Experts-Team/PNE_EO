@@ -24,7 +24,6 @@ class EmployeeImportController extends Controller
         $file = $request->file('file');
 
         $import = new EmployeesFullImport();
-
         // Wrap the whole import in a transaction if you want "all-or-nothing".
         // If you prefer "best effort" (import what can be imported), do NOT use a single transaction here.
         DB::beginTransaction();
@@ -34,7 +33,6 @@ class EmployeeImportController extends Controller
             // If any row failed and you want to rollback everything:
             if ($import->hasFailures()) {
                 DB::rollBack();
-
                 return Redirect::back()->with([
                     'import_result' => [
                         'ok' => false,
