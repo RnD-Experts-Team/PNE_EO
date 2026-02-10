@@ -25,7 +25,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('expense-types/{expenseType}/restore', [ExpenseTypeController::class, 'restore'])
         ->name('expense-types.restore');
 
-    Route::resource('stores', StoreController::class);
+   // Route::resource('stores', StoreController::class);
 
     Route::prefix('employees/{employee}')->group(function () {
         Route::get('expenses/create', [EmployeeExpenseController::class, 'create'])->name('employees.expenses.create');
@@ -39,9 +39,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('expenses/{expense}', [StoreExpenseController::class, 'show'])->name('stores.expenses.show');
     });
 
-    Route::get('tags', [TagController::class, 'index'])->name('tags.index');
-    Route::post('tags', [TagController::class, 'store'])->name('tags.store');
-    Route::delete('tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
+    // Route::get('tags', [TagController::class, 'index'])->name('tags.index');
+    // Route::post('tags', [TagController::class, 'store'])->name('tags.store');
+    // Route::delete('tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
 });
 
 

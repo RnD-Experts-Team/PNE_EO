@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class TagController extends Controller
 {
     public function index()
-    {
+    {//yes
         $tags = Tag::orderBy('tag_name')
             ->paginate(30);
 
@@ -19,7 +19,7 @@ class TagController extends Controller
     }
 
     public function store(Request $request)
-    {
+    {//yes
         $data = $request->validate([
             'tag_name' => ['required', 'string', 'max:100', 'unique:tags,tag_name'],
         ]);
@@ -33,7 +33,7 @@ class TagController extends Controller
     }
 
     public function destroy(Tag $tag)
-    {
+    {//yes
         $tag->delete();
 
         return response()->json([
