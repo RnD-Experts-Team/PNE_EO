@@ -61,8 +61,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('employees/{employee}')->group(function () {
-        Route::get('expenses', [EmployeeExpenseController::class, 'index'])
-            ->name('api.employees.expenses.index');
+        Route::get('expenses/create', [EmployeeExpenseController::class, 'create'])
+            ->name('api.employees.expenses.create');
 
         Route::post('expenses', [EmployeeExpenseController::class, 'store'])
             ->name('api.employees.expenses.store');
