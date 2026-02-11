@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class MilestoneTemplateController extends Controller
 {
     public function index()
-    {
+    {//yes
         $templates = MilestoneTemplate::orderBy('milestone_type')
             ->orderBy('sort_order')
             ->get()
@@ -29,7 +29,7 @@ class MilestoneTemplateController extends Controller
     }
 
     public function store(Request $request)
-    {
+    {//yes
         $validated = $request->validate([
             'milestone_type' => 'required|in:birthday,hiring_anniversary',
             'value' => 'required|integer|min:1',
@@ -75,7 +75,7 @@ class MilestoneTemplateController extends Controller
     }
 
     public function update(Request $request, MilestoneTemplate $template)
-    {
+    {//yes
         $validated = $request->validate([
             'milestone_type' => 'required|in:birthday,hiring_anniversary',
             'value' => 'required|integer|min:1',
@@ -116,7 +116,7 @@ class MilestoneTemplateController extends Controller
     }
 
     public function destroy(MilestoneTemplate $template)
-    {
+    {//yes
         $template->delete();
 
         return response()->json([
