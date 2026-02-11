@@ -53,7 +53,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/employees/import/template', [EmployeeImportController::class, 'template'])
         ->name('api.employees.import.template');
 
-    Route::apiResource('employees', EmployeeController::class);
+    Route::apiResource('/employees', EmployeeController::class);
 
     /*
     |--------------------------------------------------------------------------
@@ -90,8 +90,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('stores', StoreController::class);
 
     Route::prefix('stores/{store}')->group(function () {
-        Route::get('expenses', [StoreExpenseController::class, 'index'])
-            ->name('api.stores.expenses.index');
+        Route::get('expenses/create', [StoreExpenseController::class, 'create'])
+            ->name('api.stores.expenses.create');
 
         Route::post('expenses', [StoreExpenseController::class, 'store'])
             ->name('api.stores.expenses.store');

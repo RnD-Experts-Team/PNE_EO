@@ -82,7 +82,7 @@ class ExpenseTypeController extends Controller
      * Restore soft-deleted expense type.
      */
     public function restore(int $expenseType)
-    {
+    {//yes
         ExpenseType::withTrashed()->findOrFail($expenseType)->restore();
         return redirect()->route('expense-types.index');
     }

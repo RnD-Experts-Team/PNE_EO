@@ -6,17 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\EmployeeStoreRequest;
 use App\Http\Requests\EmployeeUpdateRequest;
 use App\Models\Employee;
+use App\Models\EmployeeStatus;
+use App\Models\Store;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
     public function index(Request $request)
-    {
-        $search   = $request->string('search')->toString();
+    {//yes
+        $search = $request->string('search')->toString();
         $statusId = $request->integer('status_id') ?: null;
-        $tagId    = $request->integer('tag_id') ?: null;
-        $storeId  = $request->integer('store_id') ?: null;
+        $tagId = $request->integer('tag_id') ?: null;
+        $storeId = $request->integer('store_id') ?: null;
 
         $employees = Employee::query()
             ->with(['status', 'tags', 'employment.store'])
@@ -28,34 +31,46 @@ class EmployeeController extends Controller
                         ->orWhere('preferred_name', 'like', "%{$search}%");
                 });
             })
-            ->when($statusId, fn ($q) => $q->where('employee_status_id', $statusId))
-            ->when($tagId, fn ($q) =>
-                $q->whereHas('tags', fn ($tq) => $tq->where('tags.id', $tagId))
-            )
-            ->when($storeId, fn ($q) =>
-                $q->whereHas('employment', fn ($eq) => $eq->where('store_id', $storeId))
-            )
+            ->when($statusId, fn($q) => $q->where('employee_status_id', $statusId))
+            ->when($tagId, function ($q) use ($tagId) {
+                $q->whereHas('tags', fn($tq) => $tq->where('tags.id', $tagId));
+            })
+            ->when($storeId, function ($q) use ($storeId) {
+                $q->whereHas('employment', fn($eq) => $eq->where('store_id', $storeId));
+            })
             ->orderBy('last_name')
             ->orderBy('first_name')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         return response()->json([
             'data' => $employees,
+            'meta' => [
+                'statuses' => EmployeeStatus::orderBy('value')->get(['id', 'value']),
+                'tags' => Tag::orderBy('tag_name')->get(['id', 'tag_name']),
+                'stores' => Store::orderBy('name')->get(['id', 'name', 'manual_id']),
+                'filters' => [
+                    'search' => $search,
+                    'status_id' => $statusId,
+                    'tag_id' => $tagId,
+                    'store_id' => $storeId,
+                ],
+            ],
         ]);
     }
 
     public function store(EmployeeStoreRequest $request)
-    {
+    {//yes
         $data = $request->validated();
 
         $employee = DB::transaction(function () use ($data) {
             $employee = Employee::create([
-                'first_name'         => $data['first_name'],
-                'middle_name'        => $data['middle_name'] ?? null,
-                'last_name'          => $data['last_name'],
-                'preferred_name'     => $data['preferred_name'] ?? null,
+                'first_name' => $data['first_name'],
+                'middle_name' => $data['middle_name'] ?? null,
+                'last_name' => $data['last_name'],
+                'preferred_name' => $data['preferred_name'] ?? null,
                 'employee_status_id' => $data['employee_status_id'],
-                'about_me'           => $data['about_me'] ?? null,
+                'about_me' => $data['about_me'] ?? null,
             ]);
 
             $this->persistOneToOne($employee, $data);
@@ -65,19 +80,23 @@ class EmployeeController extends Controller
 
             return $employee->load([
                 'status',
-                'tags',
+                'contacts',
                 'employment.store',
+                'demographics',
+                'identifiers',
+                'addresses',
+                'tags',
             ]);
         });
 
         return response()->json([
             'message' => 'Employee created successfully',
-            'data'    => $employee,
+            'data' => $employee,
         ], 201);
     }
 
     public function show(Employee $employee)
-    {
+    {//yes
         $employee->load([
             'status',
             'contacts',
@@ -95,17 +114,17 @@ class EmployeeController extends Controller
     }
 
     public function update(EmployeeUpdateRequest $request, Employee $employee)
-    {
+    {//yes
         $data = $request->validated();
 
         DB::transaction(function () use ($employee, $data) {
             $employee->update([
-                'first_name'         => $data['first_name'],
-                'middle_name'        => $data['middle_name'] ?? null,
-                'last_name'          => $data['last_name'],
-                'preferred_name'     => $data['preferred_name'] ?? null,
+                'first_name' => $data['first_name'],
+                'middle_name' => $data['middle_name'] ?? null,
+                'last_name' => $data['last_name'],
+                'preferred_name' => $data['preferred_name'] ?? null,
                 'employee_status_id' => $data['employee_status_id'],
-                'about_me'           => $data['about_me'] ?? null,
+                'about_me' => $data['about_me'] ?? null,
             ]);
 
             $this->persistOneToOne($employee, $data, true);
@@ -116,31 +135,51 @@ class EmployeeController extends Controller
 
         return response()->json([
             'message' => 'Employee updated successfully',
-            'data'    => $employee->load([
+            'data' => $employee->load([
                 'status',
-                'tags',
+                'contacts',
                 'employment.store',
+                'demographics',
+                'identifiers',
+                'addresses',
+                'tags',
             ]),
         ]);
     }
 
     public function destroy(Employee $employee)
-    {
+    {//yes
+        DB::transaction(function () use ($employee) {
+        // many-to-many
+        $employee->tags()->detach();
+
+        // hasMany
+        $employee->contacts()->delete();
+        $employee->addresses()->delete();
+        $employee->expenses()->delete();
+
+        // hasOne
+        $employee->employment()->delete();
+        $employee->demographics()->delete();
+        $employee->identifiers()->delete();
+
+        // finally delete employee
         $employee->delete();
+    });
 
-        return response()->json([
-            'message' => 'Employee deleted successfully',
-        ], 204);
+    return response()->json([
+        'message' => 'Employee deleted successfully',
+    ]);
     }
-
-    /* ================= PRIVATE HELPERS ================= */
 
     private function persistOneToOne(Employee $employee, array $data, bool $isUpdate = false): void
     {
         if (array_key_exists('employment', $data)) {
+            $payload = $data['employment'] ?? [];
+
             $payload = [
-                'store_id'    => $data['employment']['store_id'] ?? null,
-                'hiring_date' => $data['employment']['hiring_date'] ?? null,
+                'store_id' => $payload['store_id'] ?? null,
+                'hiring_date' => $payload['hiring_date'] ?? null,
             ];
 
             if ($this->hasAnyFilled($payload)) {
@@ -154,11 +193,13 @@ class EmployeeController extends Controller
         }
 
         if (array_key_exists('demographics', $data)) {
+            $payload = $data['demographics'] ?? [];
+
             $payload = [
-                'date_of_birth'  => $data['demographics']['date_of_birth'] ?? null,
-                'gender'         => $data['demographics']['gender'] ?? null,
-                'marital_status' => $data['demographics']['marital_status'] ?? null,
-                'veteran_status' => $data['demographics']['veteran_status'] ?? false,
+                'date_of_birth' => $payload['date_of_birth'] ?? null,
+                'gender' => $payload['gender'] ?? null,
+                'marital_status' => $payload['marital_status'] ?? null,
+                'veteran_status' => $payload['veteran_status'] ?? false,
             ];
 
             if ($this->hasAnyFilled($payload)) {
@@ -172,10 +213,12 @@ class EmployeeController extends Controller
         }
 
         if (array_key_exists('identifiers', $data)) {
+            $payload = $data['identifiers'] ?? [];
+
             $payload = [
-                'social_security_number' => $data['identifiers']['social_security_number'] ?? null,
-                'national_id_number'     => $data['identifiers']['national_id_number'] ?? null,
-                'itin'                   => $data['identifiers']['itin'] ?? null,
+                'social_security_number' => $payload['social_security_number'] ?? null,
+                'national_id_number' => $payload['national_id_number'] ?? null,
+                'itin' => $payload['itin'] ?? null,
             ];
 
             if ($this->hasAnyFilled($payload)) {
@@ -197,12 +240,14 @@ class EmployeeController extends Controller
             $primaryCandidateId = null;
 
             foreach ($items as $item) {
-                if (!$this->hasAnyFilled($item)) continue;
+                if (!$this->hasAnyFilled($item)) {
+                    continue;
+                }
 
                 $payload = [
-                    'contact_type'  => $item['contact_type'] ?? null,
+                    'contact_type' => $item['contact_type'] ?? null,
                     'contact_value' => $item['contact_value'] ?? null,
-                    'is_primary'    => (bool)($item['is_primary'] ?? false),
+                    'is_primary' => (bool)($item['is_primary'] ?? false),
                 ];
 
                 if (!empty($item['id'])) {
@@ -210,14 +255,18 @@ class EmployeeController extends Controller
                     if ($contact) {
                         $contact->update($payload);
                         $keptIds[] = $contact->id;
+
+                        if ($payload['is_primary'] && $primaryCandidateId === null) {
+                            $primaryCandidateId = $contact->id;
+                        }
                     }
                 } else {
                     $contact = $employee->contacts()->create($payload);
                     $keptIds[] = $contact->id;
-                }
 
-                if ($payload['is_primary'] && $primaryCandidateId === null) {
-                    $primaryCandidateId = end($keptIds);
+                    if ($payload['is_primary'] && $primaryCandidateId === null) {
+                        $primaryCandidateId = $contact->id;
+                    }
                 }
             }
 
@@ -243,16 +292,18 @@ class EmployeeController extends Controller
             $keptIds = [];
 
             foreach ($items as $item) {
-                if (!$this->hasAnyFilled($item)) continue;
+                if (!$this->hasAnyFilled($item)) {
+                    continue;
+                }
 
                 $payload = [
-                    'address_type'  => $item['address_type'] ?? null,
+                    'address_type' => $item['address_type'] ?? null,
                     'address_line1' => $item['address_line1'] ?? null,
                     'address_line2' => $item['address_line2'] ?? null,
-                    'city'          => $item['city'] ?? null,
-                    'state'         => $item['state'] ?? null,
-                    'country'       => $item['country'] ?? null,
-                    'postal_code'   => $item['postal_code'] ?? null,
+                    'city' => $item['city'] ?? null,
+                    'state' => $item['state'] ?? null,
+                    'country' => $item['country'] ?? null,
+                    'postal_code' => $item['postal_code'] ?? null,
                 ];
 
                 if (!empty($item['id'])) {
@@ -285,7 +336,9 @@ class EmployeeController extends Controller
 
             if (is_string($v)) {
                 $trim = trim($v);
-                if ($trim === '' || $trim === '0') continue;
+                if ($trim === '' || $trim === '0') {
+                    continue;
+                }
                 return true;
             }
 
