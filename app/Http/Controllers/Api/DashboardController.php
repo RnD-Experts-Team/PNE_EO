@@ -15,7 +15,7 @@ class DashboardController extends Controller
     public function __construct(private CalendarEventService $calendarService) {}
 
     public function index(Request $request)
-    {
+    {//yes
         $today = Carbon::today();
         $year = (int) $today->year;
 
