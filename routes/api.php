@@ -44,8 +44,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     | Employees
     |--------------------------------------------------------------------------
     */
-    Route::get('/employees/import', [EmployeeImportController::class, 'create'])
-        ->name('api.employees.import.create');
 
     Route::post('/employees/import', [EmployeeImportController::class, 'store'])
         ->name('api.employees.import.store');
