@@ -13,6 +13,9 @@ use App\Http\Controllers\CustomEventController;
 use App\Http\Controllers\DayNoteController;
 use App\Http\Controllers\MilestoneTemplateController;
 use App\Http\Controllers\EmployeeImportController;
+Route::get('/docs', function () {
+    return view('docs');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/employees/import', [EmployeeImportController::class, 'create'])->name('employees.import.create');

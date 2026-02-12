@@ -27,7 +27,7 @@ Route::post('/login',    [AuthController::class, 'login']);
  
 Route::get('/', fn () => response()->json(['message' => 'API is running']));
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['AuthToken'])->group(function () {
     //logout
     Route::post('/logout', [AuthController::class, 'logout']);
 

@@ -2,7 +2,6 @@
 
 namespace App\Services\EventConsume\Handlers;
 
-use App\Models\Employee;
 use App\Models\User;
 use App\Services\EventConsume\EventHandlerInterface;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +26,7 @@ class UserCreatedHandler implements EventHandlerInterface
 
         DB::transaction(function () use ($id, $name, $email) {
             // Only replicate what the event gives us; do not invent password/role/etc
-            Employee::query()->updateOrCreate(
+            User::query()->updateOrCreate(
                 ['id' => $id],
                 [
                     'name'  => $name,
