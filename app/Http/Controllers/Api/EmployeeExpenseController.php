@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class EmployeeExpenseController extends Controller
 {
     public function create(Employee $employee)
-    {//YES
+    {
         return response()->json([
             'employee' => [
                 'id' => $employee->id,
@@ -27,7 +27,7 @@ class EmployeeExpenseController extends Controller
     }
 
     public function store(Request $request, Employee $employee)
-    {//YES
+    {
         $validated = $request->validate([
             'expense_type_id' => ['required', 'integer', 'exists:expense_types,id'],
             'expense_info' => ['nullable', 'string'],
@@ -64,7 +64,7 @@ class EmployeeExpenseController extends Controller
     }
 
     public function show(Employee $employee, EmployeeExpense $expense)
-    {//YES
+    {
         abort_unless($expense->employee_id === $employee->id, 404);
 
         $expense->load([

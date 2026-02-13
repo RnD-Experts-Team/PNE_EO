@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 class EmployeeController extends Controller
 {
     public function index(Request $request)
-    {//yes
+    {
         $search = $request->string('search')->toString();
         $statusId = $request->integer('status_id') ?: null;
         $tagId = $request->integer('tag_id') ?: null;
@@ -60,7 +60,7 @@ class EmployeeController extends Controller
     }
 
     public function store(EmployeeStoreRequest $request)
-    {//yes
+    {
         $data = $request->validated();
 
         $employee = DB::transaction(function () use ($data) {
@@ -96,7 +96,7 @@ class EmployeeController extends Controller
     }
 
     public function show(Employee $employee)
-    {//yes
+    {
         $employee->load([
             'status',
             'contacts',
@@ -114,7 +114,7 @@ class EmployeeController extends Controller
     }
 
     public function update(EmployeeUpdateRequest $request, Employee $employee)
-    {//yes
+    {
         $data = $request->validated();
 
         DB::transaction(function () use ($employee, $data) {
@@ -148,7 +148,7 @@ class EmployeeController extends Controller
     }
 
     public function destroy(Employee $employee)
-    {//yes
+    {
         DB::transaction(function () use ($employee) {
         // many-to-many
         $employee->tags()->detach();

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class DayNoteController extends Controller
 {
     public function store(Request $request)
-    {//yes
+    {
         $validated = $request->validate([
             'note_date' => 'required|date',
             'content' => 'required|string',
@@ -32,7 +32,7 @@ class DayNoteController extends Controller
     }
 
     public function destroy(DayNote $note)
-    {//yes
+    {
         $note->delete();
 
         return response()->json([

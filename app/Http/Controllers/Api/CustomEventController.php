@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class CustomEventController extends Controller
 {
     public function store(Request $request)
-    {//yes
+    {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -36,7 +36,7 @@ class CustomEventController extends Controller
     }
 
     public function update(Request $request, CustomEvent $event)
-    {//yes
+    {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -59,7 +59,7 @@ class CustomEventController extends Controller
     }
 
     public function destroy(CustomEvent $event)
-    {//yes
+    {
         $event->delete();
 
         return response()->json([

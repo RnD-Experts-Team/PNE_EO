@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class StoreExpenseController extends Controller
 {
     public function create(Store $store)
-    {//yes
+    {
         return response()->json([
             'store' => [
                 'id' => $store->id,
@@ -26,7 +26,7 @@ class StoreExpenseController extends Controller
     }
 
     public function store(Request $request, Store $store)
-    {//YES
+    {
         $validated = $request->validate([
             'expense_type_id' => ['required', 'integer', 'exists:expense_types,id'],
             'expense_info' => ['nullable', 'string'],
@@ -65,7 +65,7 @@ class StoreExpenseController extends Controller
     }
 
     public function show(Store $store, StoreExpense $expense)
-    {//YES
+    {
         if ($expense->store_id !== $store->id) {
             return response()->json([
                 'message' => 'Expense not found.'

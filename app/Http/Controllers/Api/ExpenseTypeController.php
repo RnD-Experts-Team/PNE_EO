@@ -13,7 +13,7 @@ class ExpenseTypeController extends Controller
      * List all expense types (active + soft deleted)
      */
     public function index()
-    {//yes
+    {
         $expenseTypes = ExpenseType::withTrashed()
             ->orderBy('type_name')
             ->paginate(20);
@@ -27,7 +27,7 @@ class ExpenseTypeController extends Controller
      * Store new expense type
      */
     public function store(Request $request)
-    {//yes
+    {
         $data = $request->validate([
             'type_name' => [
                 'required',
@@ -50,7 +50,7 @@ class ExpenseTypeController extends Controller
      * Update expense type
      */
     public function update(Request $request, ExpenseType $expenseType)
-    {//yes
+    {
         $data = $request->validate([
             'type_name' => [
                 'required',
@@ -75,7 +75,7 @@ class ExpenseTypeController extends Controller
      * Soft delete expense type
      */
     public function destroy(ExpenseType $expenseType)
-    {//yes
+    {
         $expenseType->delete();
 
         return response()->json([
@@ -87,7 +87,7 @@ class ExpenseTypeController extends Controller
      * Restore soft-deleted expense type
      */
     public function restore(int $expenseType)
-    {//yes
+    {
         $expenseType = ExpenseType::withTrashed()->findOrFail($expenseType);
         $expenseType->restore();
 
