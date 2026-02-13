@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Store extends Model
 {
+       public $incrementing = false;
+    protected $keyType = 'int';
     protected $fillable = [
+        'id',
         'manual_id',
         'name',
         'address_line1',

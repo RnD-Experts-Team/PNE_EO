@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MilestoneTemplate extends Model
 {
+   
     protected $fillable = ['milestone_type', 'value', 'unit', 'is_active', 'sort_order'];
 
     protected $casts = [
