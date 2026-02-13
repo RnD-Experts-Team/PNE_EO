@@ -14,6 +14,7 @@ class StoreUpdatedHandler implements EventHandlerInterface
         if ($storeId <= 0) {
             throw new \Exception('StoreUpdatedHandler: missing/invalid store_id');
         }
+        
 
         $changedFields = data_get($event, 'changed_fields', []);
         if (!is_array($changedFields)) {
@@ -58,7 +59,7 @@ class StoreUpdatedHandler implements EventHandlerInterface
                     $metadata = [];
                 }
 
-                $updateData['manual_id']     = $metadata['manual_id']     ?? '';
+                $updateData['manual_id']     = $storeId ;
                 $updateData['address_line1'] = $metadata['address_line1'] ?? '';
                 $updateData['address_line2'] = $metadata['address_line2'] ?? '';
                 $updateData['city']          = $metadata['city']          ?? '';

@@ -16,7 +16,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
           $middleware->alias([
-           'CheckSecret' => \App\Http\Middleware\CheckSecretKeyMiddleware::class,
            'AuthToken' => \App\Http\Middleware\AuthTokenStoreScopeMiddleware::class,
         ]);
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);

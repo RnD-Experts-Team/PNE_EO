@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\EmployeeExpenseController;
 use App\Http\Controllers\Api\ExpenseTypeController;
-use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\StoreExpenseController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\DashboardController;
@@ -23,15 +22,13 @@ use Illuminate\Support\Facades\Storage;
 */
  
 //login and register
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
 
+ 
  
 Route::get('/', fn () => response()->json(['message' => 'API is running']));
 
 Route::middleware(['AuthToken'])->group(function () {
-    //logout
-    Route::post('/logout', [AuthController::class, 'logout']);
+ 
 
     /*
     |--------------------------------------------------------------------------
@@ -87,8 +84,7 @@ Route::middleware(['AuthToken'])->group(function () {
     | Stores
     |--------------------------------------------------------------------------
     */
-    Route::apiResource('stores', StoreController::class);
-
+ 
     Route::prefix('stores/{store}')->group(function () {
         Route::get('expenses/create', [StoreExpenseController::class, 'create'])
             ->name('api.stores.expenses.create');
@@ -146,48 +142,4 @@ Route::middleware(['AuthToken'])->group(function () {
         Route::delete('{template}', [MilestoneTemplateController::class, 'destroy'])->name('destroy');
     });
 
-});
-Route::get('/openapi.json', function () {
-    $path = config('api-docs.spec_path');
-
-    if (!file_exists($path)) {
-        return response()->json(['error' => 'OpenAPI file not found'], 404);
-    }
-
-    return response()->file($path, [
-        'Content-Type' => 'application/json',
-    ]);
-});
-
-Route::get('/docs', function () {
-    $title  = config('api-docs.title');
-    $theme  = config('api-docs.scalar.theme');
-    $layout = config('api-docs.scalar.layout');
-    $dark   = config('api-docs.scalar.dark');
-
-    // إذا spec_url محدد بالـ env استخدمه، غير هيك استخدم الراوت تبعنا
-    $specUrl = config('api-docs.spec_url') ?: url('/api/openapi.json');
-
-    $html = <<<HTML
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>{$title}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-</head>
-<body>
-  <script
-    id="api-reference"
-    data-url="{$specUrl}"
-    data-theme="{$theme}"
-    data-layout="{$layout}"
-    data-dark-mode="{$dark}"
-  ></script>
-  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
-</body>
-</html>
-HTML;
-
-    return response($html, 200)->header('Content-Type', 'text/html');
 });

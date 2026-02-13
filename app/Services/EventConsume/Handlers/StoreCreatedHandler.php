@@ -21,6 +21,10 @@ class StoreCreatedHandler implements EventHandlerInterface
         if ($name === '') {
             throw new \Exception('StoreCreatedHandler: missing store.name');
         }
+         $store_id = (string) data_get($storePayload, 'store_id', '');
+        if ($store_id === '') {
+            throw new \Exception('StoreCreatedHandler: missing store.name');
+        }
 
         $metadata = data_get($storePayload, 'metadata', []);
         if (!is_array($metadata)) {
@@ -29,13 +33,13 @@ class StoreCreatedHandler implements EventHandlerInterface
 
         $isActive = (bool) data_get($storePayload, 'is_active', true);
 
-        DB::transaction(function () use ($id, $name, $metadata, $isActive) {
+        DB::transaction(function () use ($id, $name, $store_id, $metadata, $isActive) {
 
             Store::query()->updateOrCreate(
                 ['id' => $id],
                 [
                     'name'          => $name,
-                    'manual_id'     => $metadata['manual_id']     ?? '',
+                    'manual_id'     => $store_id,
                     'address_line1' => $metadata['address_line1'] ?? '',
                     'address_line2' => $metadata['address_line2'] ?? '',
                     'city'          => $metadata['city']          ?? '',
