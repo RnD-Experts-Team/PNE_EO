@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Store extends Model
 {
+       public $incrementing = false;
+    protected $keyType = 'int';
     protected $fillable = [
         'manual_id',
         'name',

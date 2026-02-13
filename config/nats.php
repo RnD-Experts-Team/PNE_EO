@@ -10,7 +10,7 @@ return [
 
     'jetstream' => [
         'enabled' => true,
-        'stream' => env('NATS_DATA_STREAM', 'DATA_EVENTS'),
+        'stream' => env('NATS_EO_STREAM', 'EO_EVENTS'),
         'subjects' => ['eo.v1.>'],
     ],
     /**
@@ -20,7 +20,7 @@ return [
     'streams' => [
         [
             'name' => env('NATS_AUTH_STREAM', 'AUTH_EVENTS'),
-            'durable' => env('NATS_AUTH_DURABLE', 'eo_DATA_AUTH_CONSUMER'),
+            'durable' => env('NATS_AUTH_DURABLE', 'EO_AUTH_CONSUMER'),
             'filter_subject' => 'auth.v1.>', // match your stream subjects
         ],
 
