@@ -11,6 +11,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             EmpStatusSeeder::class,
             DemoDataSeeder::class,
+            UsersTableSeeder::class,
+
         ]);
+      
+
     }
 }
